@@ -5,6 +5,9 @@
 /.next/
 /out/
 
+# tooling scratch (not part of the app)
+package-lock.json.bak
+
 # production
 /build
 
