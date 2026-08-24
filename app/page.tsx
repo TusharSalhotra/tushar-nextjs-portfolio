@@ -598,8 +598,8 @@ function Footer() {
         <span>© {new Date().getFullYear()} Tushar Salhotra</span>
         <div>
           <a href="mailto:tusharsalhotra@gmail.com" aria-label="Email"><Mail size={18} /></a>
-          <a href="#" aria-label="LinkedIn"><Linkedin size={18} /></a>
-          <a href="#" aria-label="GitHub"><Github size={18} /></a>
+          <a href="https://www.linkedin.com/in/tushar-salhotra-b59382194/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><Linkedin size={18} /></a>
+          <a href="https://github.com/TusharSalhotra" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><Github size={18} /></a>
         </div>
       </div>
     </footer>
