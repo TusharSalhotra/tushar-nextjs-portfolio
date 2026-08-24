@@ -33,6 +33,27 @@ a { color: inherit; text-decoration: none; }
 .desktop-nav a:hover { color: var(--ink); }
 .nav-cta, .button { display: inline-flex; align-items: center; gap: 9px; font-weight: 700; }
 .nav-cta { background: var(--dark); color: white; padding: 11px 17px; border-radius: 99px; font-size: 13px; }
+
+/* Mobile nav — hidden above 900px, shown as a hamburger below it */
+.menu-toggle { display: none; background: none; border: 0; padding: 6px; cursor: pointer; color: var(--ink); }
+.mobile-nav { display: none; }
+@media (max-width: 900px) {
+  .menu-toggle { display: inline-flex; }
+  .nav-cta { display: none; }
+  .mobile-nav { display: flex; flex-direction: column; overflow: hidden; border-top: 1px solid var(--line); }
+  .mobile-nav a { padding: 16px 0; font-size: 14px; font-weight: 700; border-bottom: 1px solid var(--line); }
+}
+
+/* Animated skill bars (Skills section) */
+.core-skills { display: grid; gap: 18px; max-width: 640px; margin: 46px 0 54px; }
+.skill-bar-head { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+.skill-bar-level { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: .6px; }
+.skill-bar-track { height: 8px; border-radius: 99px; background: var(--surface); border: 1px solid var(--line); overflow: hidden; }
+.skill-bar-fill { height: 100%; border-radius: 99px; background: var(--dark); }
+
+/* Expandable project card "N more highlights" toggle */
+.highlight-toggle { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 0; color: var(--accent); font-size: 13px; font-weight: 700; cursor: pointer; }
+.highlight-toggle:hover { color: #fff; }
 .hero { min-height: 100vh; display: flex; align-items: center; padding-top: 150px; overflow: hidden; }
 .hero-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 70px; align-items: center; }
 .eyebrow, .section-label { text-transform: uppercase; letter-spacing: 1.8px; font-size: 11px; font-weight: 800; color: var(--muted); }

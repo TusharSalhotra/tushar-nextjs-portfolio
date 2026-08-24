@@ -1,4 +1,8 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { AnimatePresence, motion, useInView } from "framer-motion";
 import {
   ArrowUpRight,
   CheckCircle2,
@@ -10,9 +14,83 @@ import {
   MapPin,
   Menu,
   Phone,
+  Plus,
   X,
   Zap,
 } from "lucide-react";
+
+/**
+ * Reveal
+ * ------
+ * Scroll-triggered fade/slide-in wrapper used across every section.
+ * `useInView` (framer-motion) fires once the element crosses the viewport,
+ * `margin` pre-triggers slightly before it's fully on screen so the motion
+ * feels responsive rather than late.
+ */
+function Reveal({
+  children,
+  delay = 0,
+  y = 24,
+  className,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  y?: number;
+  className?: string;
+}) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-80px 0px" });
+  return (
+    <motion.div
+      ref={ref}
+      className={className}
+      initial={{ opacity: 0, y }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/**
+ * SkillBar
+ * --------
+ * Animated proficiency meter — the fill animates from 0 to `level`% only
+ * once it scrolls into view, matching the "scroll-triggered skill bar" spec.
+ * Levels are self-assessed relative indicators (Core vs. Working knowledge),
+ * not a precise/quantified metric.
+ */
+function SkillBar({ name, level, delay = 0 }: { name: string; level: number; delay?: number }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-40px 0px" });
+  return (
+    <div className="skill-bar" ref={ref}>
+      <div className="skill-bar-head">
+        <span>{name}</span>
+        <span className="skill-bar-level">{level >= 90 ? "Core" : "Proficient"}</span>
+      </div>
+      <div className="skill-bar-track">
+        <motion.div
+          className="skill-bar-fill"
+          initial={{ width: 0 }}
+          animate={inView ? { width: `${level}%` } : { width: 0 }}
+          transition={{ duration: 1, delay, ease: [0.16, 1, 0.3, 1] }}
+        />
+      </div>
+    </div>
+  );
+}
+
+const coreSkills = [
+  { name: "React.js", level: 96 },
+  { name: "Next.js", level: 94 },
+  { name: "TypeScript / JavaScript", level: 92 },
+  { name: "Redux Toolkit / State Management", level: 88 },
+  { name: "Tailwind CSS / ShadCN / UI Systems", level: 90 },
+  { name: "Testing (Jest / Vitest / RTL)", level: 80 },
+  { name: "AI-Assisted Development", level: 85 },
+];
 
 const projects = [
   {
@@ -227,7 +305,14 @@ export default function Home() {
   );
 }
 
+const navItems = ["About", "Projects", "Skills", "Experience", "Contact"];
+
 function Header() {
+  // Mobile nav toggle state — the hamburger/close icons were already imported
+  // but unused; this wires up an actual responsive menu (AnimatePresence
+  // handles the enter/exit animation of the dropdown panel).
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <header className="site-header">
       <div className="container nav">
@@ -235,16 +320,46 @@ function Header() {
           TS<span>.</span>
         </a>
         <nav className="desktop-nav">
-          {["About", "Projects", "Skills", "Experience", "Contact"].map((item) => (
+          {navItems.map((item) => (
             <a href={`#${item.toLowerCase()}`} key={item}>
               {item}
             </a>
           ))}
         </nav>
-        <a className="nav-cta" href="mailto:tusharsalhotra@gmail.com">
+        <motion.a
+          className="nav-cta"
+          href="mailto:tusharsalhotra@gmail.com"
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.97 }}
+        >
           Let&apos;s talk <ArrowUpRight size={16} />
-        </a>
+        </motion.a>
+        <button
+          className="menu-toggle"
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((v) => !v)}
+        >
+          {menuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
       </div>
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.nav
+            className="mobile-nav"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {navItems.map((item) => (
+              <a href={`#${item.toLowerCase()}`} key={item} onClick={() => setMenuOpen(false)}>
+                {item}
+              </a>
+            ))}
+          </motion.nav>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
@@ -271,8 +386,22 @@ function Hero() {
             reliable, maintainable web applications.
           </p>
           <div className="hero-actions">
-            <a className="button primary" href="#projects">Explore my work <ArrowUpRight size={18} /></a>
-            <a className="button secondary" href="#contact">Get in touch <Mail size={17} /></a>
+            <motion.a
+              className="button primary"
+              href="#projects"
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              Explore my work <ArrowUpRight size={18} />
+            </motion.a>
+            <motion.a
+              className="button secondary"
+              href="#contact"
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              Get in touch <Mail size={17} />
+            </motion.a>
           </div>
           <div className="hero-meta">
             <span><MapPin size={15} /> Chandigarh, India</span>
@@ -330,11 +459,11 @@ function About() {
   return (
     <section id="about" className="section about">
       <div className="container two-col">
-        <div>
+        <Reveal>
           <p className="section-label">01 — About</p>
           <h2>Frontend engineering with a <em>business mindset.</em></h2>
-        </div>
-        <div className="about-copy">
+        </Reveal>
+        <Reveal delay={0.1} className="about-copy">
           <p>
             I&apos;m a frontend-focused full stack developer with 5+ years of experience
             building scalable enterprise applications using React.js, Next.js,
@@ -362,7 +491,7 @@ function About() {
             <div><strong>7</strong><span>Featured projects</span></div>
             <div><strong>6</strong><span>Core domains</span></div>
           </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -372,17 +501,22 @@ function Expertise() {
   return (
     <section className="section expertise">
       <div className="container">
-        <div className="section-heading">
+        <Reveal className="section-heading">
           <div><p className="section-label">02 — Expertise</p><h2>What I <em>do best.</em></h2></div>
           <p>Focused on building products that are maintainable, scalable and useful — not just visually impressive.</p>
-        </div>
+        </Reveal>
         <div className="expertise-grid">
-          {expertise.map((item) => (
-            <article className="expertise-card" key={item.icon}>
-              <span>{item.icon}</span>
-              <h3>{item.title}</h3>
-              <p>{item.text}</p>
-            </article>
+          {expertise.map((item, i) => (
+            <Reveal delay={i * 0.06} key={item.icon}>
+              <motion.article
+                className="expertise-card"
+                whileHover={{ y: -6, transition: { duration: 0.2 } }}
+              >
+                <span>{item.icon}</span>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </motion.article>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -390,41 +524,86 @@ function Expertise() {
   );
 }
 
+/**
+ * ProjectCard
+ * -----------
+ * Click-to-expand card: the first two highlights are always visible; the
+ * rest reveal with an animated height/opacity transition (AnimatePresence)
+ * when the card is clicked — matches the "expandable project card" spec.
+ */
+function ProjectCard({ project }: { project: (typeof projects)[number] }) {
+  const [expanded, setExpanded] = useState(false);
+  const visibleHighlights = expanded ? project.highlights : project.highlights.slice(0, 2);
+  const hiddenCount = project.highlights.length - 2;
+
+  return (
+    <motion.article
+      className="project-card"
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.2 }}
+    >
+      <div className="project-top">
+        <span className="project-number">{project.number}</span>
+        <span className="project-category">{project.category}</span>
+      </div>
+      <div className="project-body">
+        <div>
+          <h3>{project.title}</h3>
+          <div className="project-meta">
+            <span>{project.role}</span>
+            <span>{project.duration}</span>
+          </div>
+          <p>{project.description}</p>
+        </div>
+        <div className="project-highlights">
+          {visibleHighlights.map((highlight) => (
+            <span key={highlight}><CheckCircle2 size={15} /> {highlight}</span>
+          ))}
+          <AnimatePresence initial={false}>
+            {!expanded && hiddenCount > 0 && (
+              <motion.button
+                key="toggle"
+                type="button"
+                className="highlight-toggle"
+                onClick={() => setExpanded(true)}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                whileHover={{ x: 3 }}
+              >
+                <Plus size={14} /> {hiddenCount} more highlight{hiddenCount > 1 ? "s" : ""}
+              </motion.button>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+      <div className="project-footer">
+        <div className="tech-list">{project.tech.map((t) => <span key={t}>{t}</span>)}</div>
+        <motion.span
+          className="project-arrow"
+          animate={{ rotate: expanded ? 45 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <ArrowUpRight size={20} />
+        </motion.span>
+      </div>
+    </motion.article>
+  );
+}
+
 function Projects() {
   return (
     <section id="projects" className="section projects">
       <div className="container">
-        <div className="section-heading">
+        <Reveal className="section-heading">
           <div><p className="section-label">03 — Selected Work</p><h2>Projects that solve <em>real problems.</em></h2></div>
           <p>Enterprise applications across healthcare, security, IoT and risk management.</p>
-        </div>
+        </Reveal>
         <div className="project-list">
-          {projects.map((project) => (
-            <article className="project-card" key={project.number}>
-              <div className="project-top">
-                <span className="project-number">{project.number}</span>
-                <span className="project-category">{project.category}</span>
-              </div>
-              <div className="project-body">
-                <div>
-                  <h3>{project.title}</h3>
-                  <div className="project-meta">
-                    <span>{project.role}</span>
-                    <span>{project.duration}</span>
-                  </div>
-                  <p>{project.description}</p>
-                </div>
-                <div className="project-highlights">
-                  {project.highlights.map((highlight) => (
-                    <span key={highlight}><CheckCircle2 size={15} /> {highlight}</span>
-                  ))}
-                </div>
-              </div>
-              <div className="project-footer">
-                <div className="tech-list">{project.tech.map((t) => <span key={t}>{t}</span>)}</div>
-                <span className="project-arrow"><ArrowUpRight size={20} /></span>
-              </div>
-            </article>
+          {projects.map((project, i) => (
+            <Reveal delay={i * 0.05} key={project.number}>
+              <ProjectCard project={project} />
+            </Reveal>
           ))}
         </div>
       </div>
@@ -436,17 +615,19 @@ function Domains() {
   return (
     <section id="domains" className="section expertise">
       <div className="container">
-        <div className="section-heading">
+        <Reveal className="section-heading">
           <div><p className="section-label">04 — Domain Experience</p><h2>Industries I&apos;ve <em>built for.</em></h2></div>
           <p>Deep, repeated exposure to a small set of domains rather than shallow work across many.</p>
-        </div>
+        </Reveal>
         <div className="expertise-grid">
           {domains.map((item, i) => (
-            <article className="expertise-card" key={item.title}>
-              <span>{String(i + 1).padStart(2, "0")}</span>
-              <h3>{item.title}</h3>
-              <p>{item.text}</p>
-            </article>
+            <Reveal delay={i * 0.06} key={item.title}>
+              <motion.article className="expertise-card" whileHover={{ y: -6, transition: { duration: 0.2 } }}>
+                <span>{String(i + 1).padStart(2, "0")}</span>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </motion.article>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -458,10 +639,10 @@ function Architecture() {
   return (
     <section id="architecture" className="section architecture">
       <div className="container">
-        <div className="two-col architecture-intro">
+        <Reveal className="two-col architecture-intro">
           <div><p className="section-label">05 — Architecture</p><h2>From interface to <em>architecture.</em></h2></div>
           <p>I think beyond individual screens. I design frontend structures around reusable components, business workflows, API integration and long-term maintainability.</p>
-        </div>
+        </Reveal>
         <div className="architecture-flow">
           {[
             ["01", "User Experience", "Responsive UI · Accessibility · Reusable components"],
@@ -470,19 +651,19 @@ function Architecture() {
             ["04", "Integration", "REST APIs · Authentication · Real-time events"],
             ["05", "Delivery", "Testing · Performance · CI/CD · Cloud"],
           ].map(([n, title, text], i) => (
-            <div className="arch-step" key={n}>
+            <Reveal delay={i * 0.06} key={n} className="arch-step">
               <div className="arch-num">{n}</div>
               <div><h3>{title}</h3><p>{text}</p></div>
               {i < 4 && <div className="arch-line" />}
-            </div>
+            </Reveal>
           ))}
         </div>
         <div className="skills-grid architecture-principles">
-          {architecturePrinciples.map((item) => (
-            <div className="skill-group" key={item.title}>
+          {architecturePrinciples.map((item, i) => (
+            <Reveal delay={i * 0.04} key={item.title} className="skill-group">
               <h3>{item.title}</h3>
               <p>{item.text}</p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -494,17 +675,19 @@ function Process() {
   return (
     <section id="process" className="section expertise">
       <div className="container">
-        <div className="section-heading">
+        <Reveal className="section-heading">
           <div><p className="section-label">06 — Process</p><h2>How I <em>work.</em></h2></div>
           <p>Agile delivery with quality gates built into the workflow, not bolted on afterward.</p>
-        </div>
+        </Reveal>
         <div className="expertise-grid">
           {processSteps.map((item, i) => (
-            <article className="expertise-card" key={item.title}>
-              <span>{String(i + 1).padStart(2, "0")}</span>
-              <h3>{item.title}</h3>
-              <p>{item.text}</p>
-            </article>
+            <Reveal delay={i * 0.06} key={item.title}>
+              <motion.article className="expertise-card" whileHover={{ y: -6, transition: { duration: 0.2 } }}>
+                <span>{String(i + 1).padStart(2, "0")}</span>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </motion.article>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -516,16 +699,24 @@ function Skills() {
   return (
     <section id="skills" className="section skills">
       <div className="container">
-        <div className="two-col skills-heading">
+        <Reveal className="two-col skills-heading">
           <div><p className="section-label">07 — Technology</p><h2>A modern <em>toolkit.</em></h2></div>
           <p>Technologies from my professional experience, organized around the way I build applications.</p>
-        </div>
+        </Reveal>
+
+        {/* Animated skill bars — fill on scroll-into-view (see SkillBar / coreSkills above) */}
+        <Reveal className="core-skills">
+          {coreSkills.map((skill, i) => (
+            <SkillBar key={skill.name} name={skill.name} level={skill.level} delay={i * 0.08} />
+          ))}
+        </Reveal>
+
         <div className="skills-grid">
-          {Object.entries(skills).map(([group, items]) => (
-            <div className="skill-group" key={group}>
+          {Object.entries(skills).map(([group, items], i) => (
+            <Reveal delay={i * 0.03} key={group} className="skill-group">
               <h3>{group}</h3>
               <div>{items.map((item) => <span key={item}>{item}</span>)}</div>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -537,9 +728,9 @@ function Experience() {
   return (
     <section id="experience" className="section experience">
       <div className="container">
-        <p className="section-label">08 — Experience</p>
+        <Reveal><p className="section-label">08 — Experience</p></Reveal>
         <div className="experience-list">
-          <article className="experience-item">
+          <Reveal className="experience-item">
             <div className="experience-date">JUN 2023 — PRESENT</div>
             <div>
               <h3>Senior Associate Frontend Developer</h3>
@@ -552,8 +743,8 @@ function Experience() {
                 <li>Work with Micro-Frontend architecture using Webpack Module Federation.</li>
               </ul>
             </div>
-          </article>
-          <article className="experience-item">
+          </Reveal>
+          <Reveal delay={0.1} className="experience-item">
             <div className="experience-date">FEB 2021 — MAY 2023</div>
             <div>
               <h3>Associate Frontend Developer</h3>
@@ -564,7 +755,7 @@ function Experience() {
                 <li>Collaborated with cross-functional teams for feature delivery.</li>
               </ul>
             </div>
-          </article>
+          </Reveal>
         </div>
       </div>
     </section>
@@ -574,19 +765,33 @@ function Experience() {
 function Contact() {
   return (
     <section id="contact" className="section contact">
-      <div className="container contact-box">
+      <Reveal className="container contact-box">
         <p className="section-label">09 — Contact</p>
         <h2>Have a product to <em>build?</em></h2>
         <p>Let&apos;s talk about your next React, Next.js or enterprise application.</p>
         <div className="contact-actions">
-          <a className="button primary" href="mailto:tusharsalhotra@gmail.com">Email me <Mail size={18} /></a>
-          <a className="button secondary" href="tel:8146188022">8146188022 <Phone size={17} /></a>
+          <motion.a
+            className="button primary"
+            href="mailto:tusharsalhotra@gmail.com"
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            Email me <Mail size={18} />
+          </motion.a>
+          <motion.a
+            className="button secondary"
+            href="tel:8146188022"
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            8146188022 <Phone size={17} />
+          </motion.a>
         </div>
         <div className="contact-details">
           <span><Mail size={16} /> tusharsalhotra@gmail.com</span>
           <span><MapPin size={16} /> Chandigarh, India</span>
         </div>
-      </div>
+      </Reveal>
     </section>
   );
 }
